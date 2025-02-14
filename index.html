@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hotel Booking</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Include Navigation Bar -->
+    {% include 'navbar.html' %}
+
+    <div class="container mt-5">
+      <h1>Hotel Booking System</h1>
+      {% if user %}
+      <p>Welcome, {{ user }} | <a href="/logout" onclick="return confirmLogout()">Logout</a></p>
+      {% else %}
+      <p><a href="/login">Login</a> | <a href="/register">Register</a></p>
+
+      {% endif %}
+      <p>This hotel was founded in 1978 and has a history of 47 years. We provide the highest quality service.</p>
+      <p>There are a variety of room types to choose from. Breakfast is provided, and there is an indoor swimming pool and a gym.</p>
+      <p>The departure location is at the entrance of the hotel. Shuttles are available to book through this app.</p>
+      <p>Choose the room type you are interested in and add it to your cart to consider ! You are free to add or remove any options before paying!</p>
+      <p>Shuttle schedule can be found on the shuttle page!</p>
+
+      <h2>Rooms</h2>
+      <p>* Note that the insufficient available rooms will not be marked in the list below. They can only be checked in the cart or at checkout. This may lead to longer time and inconvenience using this app.</p>
+
+      <!-- Approach 1: Room Filter Dropdown -->
+      <div class="mb-4">
+        <label for="roomTypeFilter" class="form-label">Filter by Room Type (Dropdown):</label>
+        <select class="form-select" id="roomTypeFilter">
+          <option value="all">All Rooms</option>
+          <option value="Single Room">Single Room</option>
+          <option value="Double Room">Double Room</option>
+          <option value="Suite">Suite</option>
+        </select>
+      </div>
+
+      <!-- Approach 2: Button-Based Filtering -->
+      <div class="mb-4">
+        <p class="form-label">Filter by Room Type (Buttons):</p>
+        <div class="btn-group" role="group" aria-label="Room Type Filters">
+          <button type="button" class="btn btn-outline-secondary" data-type="all">All Rooms</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="Single Room">Single Room</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="Double Room">Double Room</button>
+          <button type="button" class="btn btn-outline-secondary" data-type="Suite">Suite</button>
+        </div>
+      </div>
+
+      <!-- Room List -->
+      <ul class="list-group" id="roomList">
+        {% for room in rooms %}
+        <li class="list-group-item room-item" data-type="{{ room.type }}">
+          <strong>{{ room.type }}</strong> - ${{ room.price }}
+          <button class="btn btn-secondary btn-sm float-end" onclick="addToCart({{ room.id }})">Add to Cart</button>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="mt-4">
+        <a href="/cart" class="btn btn-secondary me-2">View Cart</a>
+        <a href="/bookings" class="btn btn-secondary">View Bookings</a>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function confirmLogout() {
+        return confirm('Are you sure you want to log out? You may need extra time to find the current page you are checking.');
+      }
+
+      // Function to filter rooms
+      function filterRooms(selectedType) {
+        const roomItems = document.querySelectorAll('.room-item');
+
+        roomItems.forEach((item) => {
+          const roomType = item.getAttribute('data-type');
+          if (selectedType === 'all' || roomType === selectedType) {
+            item.style.display = 'block'; // Show the room
+          } else {
+            item.style.display = 'none'; // Hide the room
+          }
+        });
+      }
+
+      // Approach 1: Dropdown Filtering Logic
+      document.getElementById('roomTypeFilter').addEventListener('change', function () {
+        const selectedType = this.value;
+        filterRooms(selectedType);
+      });
+
+      // Approach 2: Button-Based Filtering Logic
+      document.querySelectorAll('.btn-group .btn').forEach((button) => {
+        button.addEventListener('click', function () {
+          const selectedType = this.getAttribute('data-type');
+          filterRooms(selectedType);
+        });
+      });
+
+      // Function to add a room to the cart
+      function addToCart(roomId) {
+        fetch(`/add_to_cart/${roomId}`, {
+          method: 'POST',
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Room added to cart!');
+            } else {
+              alert('Failed to add room to cart.');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+    </script>
+  </body>
+</html>
